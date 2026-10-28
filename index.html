@@ -168,7 +168,31 @@ body.typing .wrap{padding-block-end:24px}
   .card{padding:14px;gap:12px}
   .org{font-size:clamp(22px,6.4vw,28px)}
 }
-</style>
+/* progress tab */
+.tabs button{padding-inline:4px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.kpi b{display:block;font:700 22px/1.15 var(--f-display);font-variant-numeric:tabular-nums}
+.kpi small{color:var(--muted);font-size:12px}
+.kpi.good b{color:var(--good)}
+.bon,.todo{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.bon li{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:10px;min-width:0}
+.bon li>span:first-child{display:grid;gap:2px;min-width:0}
+.bon .r{display:grid;justify-items:end;gap:4px;flex:none;font-variant-numeric:tabular-nums}
+.bars{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;align-items:end;height:130px;margin-top:14px}
+.bar{display:grid;grid-template-rows:1fr auto auto;height:100%;text-align:center;font-size:11px;color:var(--muted);min-width:0}
+.bar i{align-self:end;display:block;background:var(--accent-soft);border-top:3px solid var(--accent);border-radius:4px 4px 0 0;min-height:3px}
+.bar.now i{background:var(--accent)}
+.bar small{font-weight:700;color:var(--ink);padding-top:3px}
+.bar em{font-style:normal;white-space:nowrap}
+.funnel{display:grid;gap:8px}
+.funnel div{display:grid;grid-template-columns:1fr auto 3.2em;gap:10px;align-items:baseline;border-top:1px solid var(--line);padding-top:8px}
+.funnel b{font:700 18px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.funnel small{color:var(--muted);text-align:right}
+.todo li{border-left:3px solid var(--accent);padding-left:10px;font-size:14px}
+.todo li.warn{border-color:var(--warn)}
+.todo strong{display:block}
+</style></style>
 </head>
 <body>
 
@@ -184,6 +208,7 @@ body.typing .wrap{padding-block-end:24px}
       <button role="tab" id="t-file" aria-selected="false" data-v="file">File</button>
       <button role="tab" id="t-pipe" aria-selected="false" data-v="pipe">Pipeline</button>
       <button role="tab" id="t-cherche" aria-selected="false" data-v="cherche">Chercher</button>
+      <button role="tab" id="t-prog" aria-selected="false" data-v="prog">Progrès</button>
     </div>
   </header>
   <main id="main" class="view"></main>
@@ -192,7 +217,7 @@ body.typing .wrap{padding-block-end:24px}
 
 <script>
 "use strict";
-const B01=18428079878, B02=18428079909, SERVER="monday.com", TOOL="all_monday_api";
+const B01=18428079878, B02=18428079909, B04=18437579770, SERVER="monday.com", TOOL="all_monday_api";
 const API="https://api.monday.com/v2";
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
 let TOKEN=store.get("cadran.token");
@@ -209,10 +234,10 @@ const urlOf=s=>{const m=/https?:\/\/\S+/.exec(s||"");return m?m[0]:null};
 const fmtTel=t=>{if(!t)return"";const d=t.replace(/\D/g,"");const n=d.length===11&&d[0]==="1"?d.slice(1):d;return n.length===10?`${n.slice(0,3)} ${n.slice(3,6)}-${n.slice(6)}`:t};
 const telHref=(t,ext)=>"tel:"+(t||"").replace(/[^\d+]/g,"")+(ext?","+String(ext).replace(/\D/g,""):"");
 
-const STAGES=["00 - Prospect identifié","01 - Prise de contact","02 - RDV obtenu","03 - Rencontre réalisée","04 - Mandat proposé","05 - Mandat signé","06 - Mandat en cours","07 - Mandat complété","08 - Client actif","09 - Pige / candidats","10 - Réactivation","❌ Perdu"];
+const STAGES=["1 - À contacter","2 - En discussion","3 - RDV / rencontre","4 - Mandat proposé","5 - Mandat en cours","6 - Client","🔁 Réactivation","❌ Perdu"];
 const RANK=Object.fromEntries(STAGES.map((s,i)=>[s,i]));
-const STAGE_W={"04 - Mandat proposé":90,"02 - RDV obtenu":85,"03 - Rencontre réalisée":75,"01 - Prise de contact":55,"00 - Prospect identifié":45,"10 - Réactivation":35,"05 - Mandat signé":30,"06 - Mandat en cours":25,"07 - Mandat complété":20,"08 - Client actif":20,"09 - Pige / candidats":15,"❌ Perdu":5};
-const NOANS=new Set(["Sans réponse","Répondeur / boîte vocale"]);
+const STAGE_W={"4 - Mandat proposé":90,"3 - RDV / rencontre":80,"2 - En discussion":55,"1 - À contacter":45,"🔁 Réactivation":35,"5 - Mandat en cours":25,"6 - Client":20,"❌ Perdu":5};
+const NOANS=new Set(["📵 Pas joint"]);
 
 /* ---------- model ---------- */
 const cv=(it,id)=>{const c=(it.column_values||[]).find(c=>c.id===id);return c?(c.text||""):""};
@@ -227,9 +252,9 @@ function build(raw){
     const open=postes.filter(p=>p.st!=="Retirée");
     if(!a && !open.length) continue;
     if(cv(o,"color_mm7qdz9m")==="Hors périmètre"||cv(o,"color_mm839dfs")==="Agence (hors périmètre)") continue;
-    if(!a && cv(o,"statut")==="Client") continue;
+    if(!a && cv(o,"statut")==="✅ Client") continue;
     const p=mk(o,a,postes);
-    p.noCall=/AUCUNE APPROCHE|NE PAS (SOLLICITER|APPROCHER|RÉAPPROCHER)/i.test(p.angle)||(open.length>0&&open.every(x=>x.pr==="Ne pas solliciter")&&!a);
+    p.noCall=/AUCUNE APPROCHE|NE PAS (SOLLICITER|APPROCHER|RÉAPPROCHER)/i.test(p.angle)||(open.length>0&&open.every(x=>x.pr==="⛔ Ne pas solliciter")&&!a);
     out.push(p);
   }
   for(const a of raw.b02||[]) if(!seen.has(a.id)) out.push(mk(null,a,[]));
@@ -242,8 +267,8 @@ function mk(o,a,postes){
   const resTxt=g("text_mm8brkk1");
   return {
     id01:o?o.id:null, id02:a?a.id:null, org:(o||a).name, type:g("color_mm839dfs"), prio:g("color_mm7qdz9m"), statut:g("statut"), ville:g("texte3"),
-    stage:a?(cv(a,"color_mm37mcck")||"01 - Prise de contact"):"00 - Prospect identifié",
-    next:a?cv(a,"color_mkw67t3h"):"Appel", nextDate:a?cv(a,"date_mm378gzb"):"",
+    stage:a?(cv(a,"color_mm37mcck")||"2 - En discussion"):"1 - À contacter",
+    next:a?cv(a,"color_mkw67t3h"):"📞 Appel", nextDate:a?cv(a,"date_mm378gzb"):"",
     obs:(a&&cv(a,"text_mkw6w6dx"))||g("texte24"),
     dec:{name:decName,fn:g("text_mm0f1xph"),tel:g("texte5"),ext:g("text_mm8be17e"),mail:g("texte27"),li:urlOf(g("link_mm8bmbaa"))},
     res:resTxt?{name:resTxt,tel:g("phone_mm8b26ed"),mail:g("email_mm8b5fm4")}:null,
@@ -256,9 +281,9 @@ function score(p){
   let s=STAGE_W[p.stage]??30, why=[];
   const due=p.nextDate?daysBetween(p.nextDate,T):null;
   if(due!==null){ if(due>=0){s+=30+Math.min(due,20);why.push(due===0?["Prévu aujourd'hui","acc"]:[`En retard ${due} j`,"hot"])} else {s-=80;why.push([`Prévu le ${fmtD(p.nextDate)}`,"cold"])} }
-  else if(p.stage==="00 - Prospect identifié") why.push(["Jamais appelé","acc"]);
+  else if(p.stage==="1 - À contacter") why.push(["Jamais appelé","acc"]);
   if(open.length){s+=Math.min(open.length,3)*8;why.push([open.length+(open.length>1?" postes ouverts":" poste ouvert"),"good"])}
-  if(p.postes.some(x=>x.pr==="Signal fort"&&x.st!=="Retirée")){s+=15;why.push(["Signal fort","hot"])}
+  if(p.postes.some(x=>x.pr==="🔥 Signal fort"&&x.st!=="Retirée")){s+=15;why.push(["Signal fort","hot"])}
   const fresh=open.length&&open.every(x=>x.d&&daysBetween(x.d,T)<21);
   if(fresh&&!p.hist.length){s-=12;why.push(["Poste < 3 sem.","warn"])}
   const old=open.find(x=>x.d&&daysBetween(x.d,T)>=45); if(old){s+=10;why.push([`Ouvert depuis ${daysBetween(old.d,T)} j`,"warn"])}
@@ -269,12 +294,12 @@ function score(p){
   return {s:Math.round(s),why};
 }
 function bestPhone(p){return p.dec.tel||(p.res&&p.res.tel)||p.std||""}
-function isDue(p){ if(!bestPhone(p)||p.noCall)return false; if(["❌ Perdu","07 - Mandat complété","08 - Client actif"].includes(p.stage)&&!(p.nextDate&&p.nextDate<=T))return false; return !p.nextDate||p.nextDate<=T }
+function isDue(p){ if(!bestPhone(p)||p.noCall)return false; if(["❌ Perdu","6 - Client"].includes(p.stage)&&!(p.nextDate&&p.nextDate<=T))return false; return !p.nextDate||p.nextDate<=T }
 
 /* ---------- state ---------- */
 let RAW=SEED.raw, P=build(RAW), SNAP=SEED.at, live=false;
 let view="appel", cur=0, queue=[], skipped=new Set(), filt="tous", q="";
-let sel={r:null,k:"Appel",note:"",date:"",dateTouched:false}, busy=false;
+let sel={r:null,k:"📞 Appel",note:"",date:"",dateTouched:false}, busy=false;
 try{const v=localStorage.getItem("cadran.view");if(v)view=v}catch(e){}
 
 function recompute(){
@@ -288,7 +313,7 @@ const key=p=>p.id01||p.id02;
 const $=s=>document.querySelector(s);
 function stats(){
   const late=P.filter(p=>p.nextDate&&p.nextDate<T&&bestPhone(p)&&!["❌ Perdu"].includes(p.stage)).length;
-  const hot=P.filter(p=>["02 - RDV obtenu","03 - Rencontre réalisée","04 - Mandat proposé"].includes(p.stage)).length;
+  const hot=P.filter(p=>["3 - RDV / rencontre","4 - Mandat proposé"].includes(p.stage)).length;
   const open=P.reduce((n,p)=>n+p.postes.filter(x=>x.st==="Ouverte").length,0);
   $("#stats").innerHTML=[[queue.length,"à appeler"],[late,"en retard"],[hot,"RDV / mandats"],[open,"postes ouverts"]].map(([b,s])=>`<div class="stat"><b>${b}</b><small>${s}</small></div>`).join("");
 }
@@ -301,6 +326,7 @@ function render(){
   if(view==="appel") m.innerHTML=callView();
   else if(view==="file") m.innerHTML=listView(queue,"Personne à appeler maintenant. Revenez demain ou consultez le pipeline.",true);
   else if(view==="pipe") m.innerHTML=pipeView();
+  else if(view==="prog") m.innerHTML=progView();
   else m.innerHTML=searchView()+`<div class="foot"><button class="copy" type="button" id="logout">Déconnecter Monday sur cet iPhone</button></div>`;
   wire();
 }
@@ -317,14 +343,14 @@ function phoneBlock(p){
 }
 function plan(p,r,k){
   const tries=p.hist.filter(h=>NOANS.has(h.r)).length+(NOANS.has(r)?1:0);
-  let stage=RANK[p.stage]>=1&&p.stage!=="10 - Réactivation"&&p.stage!=="❌ Perdu"?p.stage:"01 - Prise de contact", next="Appel", date=addBD(2), cause=null, txt="";
-  if(NOANS.has(r)){ if(tries>=6){stage="10 - Réactivation";next="Relance réactivation";date=addD(45);txt=`${tries} tentatives sans réponse : pause 45 jours.`} else if(tries%3===0){next="Courriel";date=addBD(1);txt=`${tries}e tentative : courriel demain, puis on rappelle.`} else {next="Appel";date=addBD(2);txt=`Tentative ${tries} : rappel dans 2 jours ouvrables.`} }
-  else if(r==="Joint, à relancer"){next="Appel";date=addBD(3);txt="Rappel dans 3 jours ouvrables."}
-  else if(r==="Intéressé ✅"){next="RDV visio";date=addBD(2);txt="Proposer un RDV visio sous 2 jours."}
-  else if(r==="RDV obtenu ✅"){stage="02 - RDV obtenu";next="RDV visio";date=addBD(3);txt="Indiquez la date du RDV."}
-  else if(r==="Joint, pas intéressé"){stage="❌ Perdu";cause="Pas de besoin actuellement";next="Relance réactivation";date=addD(90);txt="Classé perdu, relance dans 90 jours."}
-  else if(r==="Mandat proposé"){stage="04 - Mandat proposé";next="Relance mandat";date=addBD(3);txt="Relance du mandat dans 3 jours ouvrables."}
-  if(RANK[p.stage]>RANK[stage]&&RANK[p.stage]<=9&&stage!=="❌ Perdu") stage=p.stage;
+  let stage=RANK[p.stage]>=1&&p.stage!=="🔁 Réactivation"&&p.stage!=="❌ Perdu"?p.stage:"2 - En discussion", next="📞 Appel", date=addBD(2), cause=null, txt="";
+  if(NOANS.has(r)){ if(tries>=6){stage="🔁 Réactivation";date=addD(45);txt=`${tries} tentatives sans réponse : pause 45 jours.`} else if(tries%3===0){next="✉️ Courriel";date=addBD(1);txt=`${tries}e tentative : courriel demain, puis on rappelle.`} else {date=addBD(2);txt=`Tentative ${tries} : rappel dans 2 jours ouvrables.`} }
+  else if(r==="🔄 À relancer"){date=addBD(3);txt="Rappel dans 3 jours ouvrables."}
+  else if(r==="👍 Positif"){next="🤝 Rencontre";date=addBD(2);txt="Proposer une rencontre sous 2 jours."}
+  else if(r==="📅 RDV obtenu"){stage="3 - RDV / rencontre";next="🤝 Rencontre";date=addBD(3);txt="Indiquez la date du RDV."}
+  else if(r==="❌ Pas intéressé"){stage="❌ Perdu";cause="Pas de besoin actuellement";date=addD(90);txt="Classé perdu, relance dans 90 jours."}
+  // Never move a prospect backwards in the pipeline, short of Perdu.
+  if(RANK[p.stage]>RANK[stage]&&RANK[p.stage]<=RANK["6 - Client"]&&stage!=="❌ Perdu") stage=p.stage;
   return {stage,next,date,cause,txt};
 }
 function callView(){
@@ -333,8 +359,8 @@ function callView(){
   const open=p.postes.filter(x=>x.st!=="Retirée");
   const pl=sel.r?plan(p,sel.r,sel.k):null;
   if(pl&&!sel.dateTouched) sel.date=pl.date;
-  const R=["Sans réponse","Répondeur / boîte vocale","Joint, à relancer","Intéressé ✅","RDV obtenu ✅","Joint, pas intéressé"];
-  const RL={"Sans réponse":"Pas de réponse","Répondeur / boîte vocale":"Boîte vocale","Joint, à relancer":"Joint, rappeler","Intéressé ✅":"Intéressé","RDV obtenu ✅":"RDV obtenu","Joint, pas intéressé":"Pas intéressé"};
+  const R=["📵 Pas joint","🔄 À relancer","👍 Positif","📅 RDV obtenu","❌ Pas intéressé"];
+  const RL={"📵 Pas joint":"Pas joint","🔄 À relancer":"Joint, rappeler","👍 Positif":"Intéressé","📅 RDV obtenu":"RDV obtenu","❌ Pas intéressé":"Pas intéressé"};
   return `${live?"":`<div class="banner">${SNAP?`Données hors ligne du ${esc(SNAP)}. `:""}${navigator.onLine===false?"Pas de réseau : l'enregistrement reviendra avec la connexion.":"Connexion à Monday…"}</div>`}
   <article class="card" aria-label="Appel en cours">
     <div class="why"><span class="chip">${cur+1} / ${queue.length}</span><span class="chip acc">${esc(p.stage)}</span>${p.why.map(([t,c])=>`<span class="chip ${c}">${esc(t)}</span>`).join("")}</div>
@@ -349,21 +375,73 @@ function callView(){
   <section class="card" aria-label="Résultat de l'appel">
     <div class="sec"><h3>Résultat</h3>
     <div class="results">${R.map(r=>`<button type="button" data-r="${esc(r)}" aria-pressed="${sel.r===r}">${esc(RL[r])}</button>`).join("")}</div></div>
-    <div class="row"><label style="flex:1;min-width:130px" for="k">Canal<select id="k">${["Appel","Courriel","LinkedIn","RDV visio","Rencontre"].map(k=>`<option ${sel.k===k?"selected":""}>${k}</option>`).join("")}</select></label>
+    <div class="row"><label style="flex:1;min-width:130px" for="k">Canal<select id="k">${["📞 Appel","✉️ Courriel","💼 LinkedIn","🤝 Rencontre","🎟 Invitation événement"].map(k=>`<option ${sel.k===k?"selected":""}>${k}</option>`).join("")}</select></label>
     <label style="flex:1;min-width:150px" for="nd">Prochaine action le<input type="date" id="nd" value="${esc(sel.date)}"></label></div>
     <label for="note" class="meta" style="display:grid;gap:4px">Note<textarea id="note" placeholder="Qui avez-vous eu ? Ce qui a été dit…">${esc(sel.note)}</textarea></label>
     ${pl?`<div class="plan">Monday : ${esc(pl.stage)} → ${esc(pl.next)} le ${esc(fmtD(sel.date))}. ${esc(pl.txt)}</div>`:`<div class="plan">Choisissez un résultat : le stade, la prochaine action et sa date se mettent à jour seuls.</div>`}
     <div class="actions"><button class="btn sec" type="button" id="skip">Passer</button><button class="btn pri" type="button" id="save" ${!sel.r||busy||!live?"disabled":""}>${busy?"Enregistrement…":"Enregistrer et suivant"}</button></div>
   </section>`;
 }
-function li(p,i,showCur){return `<button type="button" class="li ${showCur&&i===cur&&view!=="file"?"cur":""}" data-open="${esc(key(p))}"><span class="t">${esc(p.org)}</span><span class="sc">${esc(fmtTel(bestPhone(p))||"sans n°")}</span><span class="s">${esc(p.stage.replace(/^\d\d - /,""))} · ${esc(p.dec.name||"décideur ?")} · ${p.why.map(w=>esc(w[0])).join(" · ")}</span></button>`}
+function li(p,i,showCur){return `<button type="button" class="li ${showCur&&i===cur&&view!=="file"?"cur":""}" data-open="${esc(key(p))}"><span class="t">${esc(p.org)}</span><span class="sc">${esc(fmtTel(bestPhone(p))||"sans n°")}</span><span class="s">${esc(p.stage.replace(/^\d - /,""))} · ${esc(p.dec.name||"décideur ?")} · ${p.why.map(w=>esc(w[0])).join(" · ")}</span></button>`}
 function listView(arr,empty){return arr.length?`<div class="list">${arr.slice(0,200).map((p,i)=>li(p,i)).join("")}</div>`:`<p class="empty">${esc(empty)}</p>`}
 function pipeView(){
   const F=[["tous","Tous"],["chaud","RDV / mandats"],["contact","En contact"],["nouveau","Jamais appelés"],["react","Réactivation"],["perdu","Perdus"]];
-  const ok=p=>filt==="tous"||(filt==="chaud"&&RANK[p.stage]>=2&&RANK[p.stage]<=6)||(filt==="contact"&&p.stage==="01 - Prise de contact")||(filt==="nouveau"&&p.stage==="00 - Prospect identifié")||(filt==="react"&&p.stage==="10 - Réactivation")||(filt==="perdu"&&p.stage==="❌ Perdu");
+  const ok=p=>filt==="tous"||(filt==="chaud"&&RANK[p.stage]>=2&&RANK[p.stage]<=4)||(filt==="contact"&&p.stage==="2 - En discussion")||(filt==="nouveau"&&p.stage==="1 - À contacter")||(filt==="react"&&p.stage==="🔁 Réactivation")||(filt==="perdu"&&p.stage==="❌ Perdu");
   const by={}; for(const p of P.filter(ok)) (by[p.stage]=by[p.stage]||[]).push(p);
   return `<div class="filters">${F.map(([k,l])=>`<button type="button" data-f="${k}" aria-pressed="${filt===k}">${l}</button>`).join("")}</div>`+
     STAGES.filter(s=>by[s]).map(s=>`<section class="stage"><h2>${esc(s)}<span>${by[s].length}</span></h2>${listView(by[s].sort((a,b)=>b.score-a.score),"")}</section>`).join("");
+}
+/* ---------- progrès ---------- */
+const money=n=>Math.round(n).toLocaleString("fr-CA")+" $";
+const dmy=s=>s?s.split("-").reverse().join("/"):"";
+const weekStart=d=>{const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+function bonuses(){
+  return (RAW.b04||[]).map(it=>({org:it.name,type:cv(it,"color_mm8j3rgn"),amt:+cv(it,"numeric_mm8j99zq")||0,st:cv(it,"color_mm8jm8e2"),
+    fin:cv(it,"date_mm8j2jw1"),fees:+cv(it,"numeric_mm8jsbyd")||0,id02:String(cvl(it,"board_relation_mm8jd3c8")[0]||"")}));
+}
+function progView(){
+  const H=P.flatMap(p=>p.hist.filter(h=>h.d&&h.d<=T).map(h=>({...h,org:p.org})));
+  const joint=h=>h.r&&!NOANS.has(h.r);
+  const w0=weekStart(TODAY), week=H.filter(h=>h.d>=iso(w0));
+  const weeks=[];
+  for(let i=7;i>=0;i--){const s=new Date(w0);s.setDate(s.getDate()-7*i);const e=new Date(s);e.setDate(e.getDate()+6);const a=iso(s),b=iso(e);weeks.push({l:fmtD(a),n:H.filter(h=>h.d>=a&&h.d<=b).length,now:i===0})}
+  const max=Math.max(1,...weeks.map(w=>w.n));
+
+  const B=bonuses(), sum=f=>B.filter(f).reduce((n,b)=>n+b.amt,0);
+  const won=sum(b=>b.st==="✅ Acquise"||b.st==="💵 Versée"), paid=sum(b=>b.st==="💵 Versée"), pend=sum(b=>b.st==="⏳ En attente"||b.st==="❓ À vérifier");
+  const fees=B.filter(b=>b.st!=="❌ Annulée").reduce((n,b)=>n+b.fees,0);
+
+  const orgs=new Set(H.map(h=>h.org)), reached=new Set(H.filter(joint).map(h=>h.org));
+  const met=P.filter(p=>RANK[p.stage]>=RANK["3 - RDV / rencontre"]&&RANK[p.stage]<=RANK["6 - Client"]);
+  const mandats=P.filter(p=>p.stage==="5 - Mandat en cours"||p.stage==="6 - Client");
+  const F=[["Organisations contactées",orgs.size],["Décideur ou équipe joints",reached.size],["RDV / rencontres",met.length],["Mandats obtenus",mandats.length]];
+
+  // What can still turn into a bonus, most concrete first.
+  const in04=new Set(B.map(b=>b.id02));
+  const todo=[
+    ...mandats.filter(p=>p.id02&&!in04.has(String(p.id02))).map(p=>[p.org,"Mandat en cours sans bonification enregistrée : ajoutez l'ouverture client dans le tableau 04.","warn"]),
+    ...B.filter(b=>b.st==="❓ À vérifier").map(b=>[b.org,"À confirmer avec Daniel : date de signature du mandat et client sans facture depuis 24 mois.","warn"]),
+    ...B.filter(b=>b.type==="🥇 Premier placement"&&b.fin>=T&&b.st!=="❌ Annulée").map(b=>[b.org,`Fidélisation jusqu'au ${dmy(b.fin)} : chaque placement payé d'ici là compte.`,""]),
+    ...P.filter(p=>p.stage==="4 - Mandat proposé").map(p=>[p.org,"Mandat proposé : s'il est signé et que le client est nouveau, l'ouverture compte.",""]),
+  ];
+
+  return `<section class="card" aria-label="Bonifications"><div class="sec"><h3>Bonifications</h3>
+    ${live&&!RAW.b04?`<p class="meta">Le tableau 04 - BONIFICATIONS n'a pas pu être lu. Vérifiez votre accès dans Monday puis actualisez.</p>`:""}
+    <div class="kpis"><div class="kpi good"><b>${money(won)}</b><small>gagnées</small></div><div class="kpi"><b>${money(paid)}</b><small>déjà versées</small></div>
+    <div class="kpi"><b>${money(pend)}</b><small>en attente ou à vérifier</small></div><div class="kpi"><b>${money(fees)}</b><small>honoraires générés</small></div></div>
+    ${B.length?`<ul class="bon">${B.map(b=>`<li><span><strong>${esc(b.org)}</strong><span class="meta">${esc(b.type)}</span></span><span class="r"><b>${money(b.amt)}</b><span class="chip">${esc(b.st)}</span></span></li>`).join("")}</ul>`:`<p class="empty">Aucune bonification enregistrée pour l'instant.</p>`}
+  </div></section>
+  <section class="card" aria-label="Activité"><div class="sec"><h3>Cette semaine</h3>
+    <div class="kpis"><div class="kpi"><b>${week.length}</b><small>actions</small></div><div class="kpi"><b>${week.filter(joint).length}</b><small>personnes jointes</small></div>
+    <div class="kpi"><b>${week.filter(h=>h.r==="📅 RDV obtenu").length}</b><small>RDV obtenus</small></div><div class="kpi"><b>${new Set(week.map(h=>h.org)).size}</b><small>organisations touchées</small></div></div>
+    <div class="bars" role="img" aria-label="Actions par semaine sur 8 semaines : ${weeks.map(w=>w.n).join(", ")}">${weeks.map(w=>`<div class="bar${w.now?" now":""}"><i style="height:${Math.round(w.n/max*100)}%"></i><small>${w.n}</small><em>${esc(w.l)}</em></div>`).join("")}</div>
+  </div></section>
+  <section class="card" aria-label="Entonnoir"><div class="sec"><h3>Depuis le début</h3>
+    <div class="funnel">${F.map(([l,n],i)=>`<div><span>${l}</span><b>${n}</b><small>${i&&F[i-1][1]?Math.round(n/F[i-1][1]*100)+" %":""}</small></div>`).join("")}</div>
+  </div></section>
+  <section class="card" aria-label="Prochaines bonifications"><div class="sec"><h3>Prochaines bonifications à aller chercher</h3>
+    ${todo.length?`<ul class="todo">${todo.map(([o,t,c])=>`<li class="${c}"><strong>${esc(o)}</strong>${esc(t)}</li>`).join("")}</ul>`:`<p class="empty">Rien en vue pour l'instant : continuez d'appeler.</p>`}
+  </div></section>`;
 }
 function searchView(){
   const n=q.trim().toLowerCase();
@@ -393,7 +471,7 @@ function wireLogin(){const b=$("#connect"),i=$("#tok"),m=$("#loginMsg");if(!b)re
     catch(e){TOKEN=null;b.disabled=false;m.textContent=e.code==="auth"?"Monday refuse ce jeton. Recopiez-le en entier depuis My access tokens.":"Pas de réseau. Réessayez une fois connecté."}};
   b.addEventListener("click",go);i.addEventListener("keydown",e=>{if(e.key==="Enter")go()})}
 function keepNote(){const n=$("#note");if(n)sel.note=n.value}
-function reset(){sel={r:null,k:"Appel",note:"",date:"",dateTouched:false}}
+function reset(){sel={r:null,k:"📞 Appel",note:"",date:"",dateTouched:false}}
 function openP(k){
   skipped.delete(k); recompute();
   let i=queue.findIndex(p=>key(p)===k);
@@ -417,6 +495,7 @@ async function gql(query,variables){
 }
 const F01='id name column_values(ids:["color_mm839dfs","texte6","texte","texte8","statut","texte5","texte27","text_mm0f1xph","texte3","texte24","link_mkw74bkg","color_mm7qdz9m","text_mm8brkk1","phone_mm8b26ed","email_mm8b5fm4","phone_mm8btzys","text_mm8be17e","link_mm8bmbaa","text_mm8bmezj","date_mm8bsy2m"]){id text} subitems{id name column_values(ids:["status","date0","color_mm6m8p7d","link_mm6mbqpf","text_mm6mzxpx"]){id text}}';
 const F02='id name group{id} column_values(ids:["date_mm378gzb","color_mkw67t3h","text_mkw6w6dx","color_mm37mcck","board_relation_mkwsc5xn"]){id text ... on BoardRelationValue{linked_item_ids}} subitems{id name column_values(ids:["color_mm37p8a4","date_mm37s3q6","color_mm37ysrg","text_mm37dgay"]){id text}}';
+const F04='id name column_values(ids:["color_mm8j3rgn","numeric_mm8j99zq","color_mm8jm8e2","date_mm8j2jw1","numeric_mm8jsbyd","board_relation_mm8jd3c8"]){id text ... on BoardRelationValue{linked_item_ids}}';
 async function pageAll(board,fields){
   let items=[], d=await gql(`query{boards(ids:[${board}]){items_page(limit:250){cursor items{${fields}}}}}`);
   let pg=d.boards[0].items_page; items=items.concat(pg.items);
@@ -429,8 +508,8 @@ async function refresh(){
   if(!TOKEN){setSync("","Non connecté");return}
   setSync("","Synchronisation…");
   try{
-    const [b01,b02]=await Promise.all([pageAll(B01,F01),pageAll(B02,F02)]);
-    RAW={b01,b02}; P=build(RAW); live=true;
+    const [b01,b02,b04]=await Promise.all([pageAll(B01,F01),pageAll(B02,F02),pageAll(B04,F04).catch(()=>null)]);
+    RAW={b01,b02,b04}; P=build(RAW); live=true;
     const st=new Date(); SNAP=st.toLocaleDateString("fr-CA")+" "+st.toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"});
     store.set("cadran.cache",JSON.stringify({at:SNAP,raw:RAW}));
     const now=new Date(); setSync("live","Monday "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"));
@@ -458,8 +537,10 @@ async function save(){
     const cvs={color_mm37mcck:{label:pl.stage},color_mkw67t3h:{label:pl.next},date_mm378gzb:{date}};
     if(pl.cause)cvs.color_mm37nz0a={label:pl.cause};
     await gql(`mutation($v:JSON!){change_multiple_column_values(board_id:${B02},item_id:${id02},column_values:$v){id}}`,{v:JSON.stringify(cvs)});
-    if(p.id01&&["Prospect identifié","A Contacter",""].includes(p.statut)){
-      try{await gql(`mutation($v:JSON!){change_multiple_column_values(board_id:${B01},item_id:${p.id01},column_values:$v){id}}`,{v:JSON.stringify({statut:{label:pl.stage==="❌ Perdu"?"Perdu":"Prospect"}})});p.statut="Prospect"}catch(e){}
+    // Contacts with no Statut become Prospect; a Prospect turned down becomes Perdu. Clients are left alone.
+    const st01=pl.stage==="❌ Perdu"?"❌ Perdu":"🎯 Prospect";
+    if(p.id01&&(!p.statut||(p.statut==="🎯 Prospect"&&st01!==p.statut))){
+      try{await gql(`mutation($v:JSON!){change_multiple_column_values(board_id:${B01},item_id:${p.id01},column_values:$v){id}}`,{v:JSON.stringify({statut:{label:st01}})});p.statut=st01}catch(e){}
     }
     p.hist.unshift({k:sel.k,d:T,r:sel.r,n:sel.note}); p.stage=pl.stage; p.next=pl.next; p.nextDate=date;
     toast("Enregistré dans Monday : "+p.org);

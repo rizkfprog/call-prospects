@@ -1,6 +1,6 @@
 // Caches only the app shell so the icon opens without network.
 // Monday API calls are never cached: prospect data stays in the page's own storage on the device.
-const CACHE = "cadran-v3";
+const CACHE = "cadran-v5";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
