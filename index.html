@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Cadran">
+<meta name="apple-mobile-web-app-title" content="Call Prospects">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#eef2f1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0c1413" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex,nofollow">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Cadran Lépine</title>
+<title>Call Prospects</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -117,6 +117,57 @@ html{-webkit-tap-highlight-color:transparent}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .login{display:grid;gap:12px}.login ol{margin:0;padding-left:20px;display:grid;gap:4px;color:var(--muted)}
 .foot{display:flex;justify-content:center;padding-top:8px}
+/* mobile-pass v1 */
+/* One axis only: the page scrolls vertically; sideways drag and rubber-band are locked. */
+html,body{overflow-x:clip;overscroll-behavior-x:none;max-width:100%}
+body{touch-action:pan-y pinch-zoom;-webkit-text-size-adjust:100%}
+.filters{touch-action:pan-x pan-y;overscroll-behavior-x:contain;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.card,.card *{overflow-wrap:anywhere}
+.postes .d,.hist .d,.chip,.callbtn .num,.alt .num,.copy,.btn,.results button{overflow-wrap:normal}
+.copy{flex:none;white-space:nowrap}
+.postes li{min-height:34px;align-items:center}
+/* iOS zooms into any field under 16px: keep every field at 16px. */
+input,select,textarea{font-size:16px!important}
+select,input[type=date]{-webkit-appearance:none;appearance:none;min-height:46px}
+input[type=date]{display:block}
+/* Thumb-sized targets, no double-tap zoom delay, no accidental text selection. */
+button,a,.tabs button,[role=tab]{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.copy{min-height:42px;padding:10px 14px;font-size:14px;display:inline-flex;align-items:center;text-decoration:none}
+.filters button{min-height:42px;padding:9px 14px}
+.li{min-height:60px;padding:12px 14px}
+.alt{min-height:58px}
+/* Bottom tab bar within thumb reach; stays clear of the home indicator. */
+:root{--tabh:60px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:8;border-radius:0;gap:0;
+  padding:6px max(10px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-right,0px));
+  background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgb(0 0 0/.06)}
+.tabs button{min-height:48px;font-size:15px;border-radius:10px}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);box-shadow:none}
+.wrap{padding-block:0 calc(var(--tabh) + env(safe-area-inset-bottom,0px) + 28px)}
+/* Once a result is picked, Passer / Enregistrer dock above the tab bar wherever the page is scrolled. */
+.actions:has(#save:not([disabled])){position:fixed;left:0;right:0;z-index:7;
+  bottom:calc(var(--tabh) + env(safe-area-inset-bottom,0px));
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
+  background:var(--surface);border-top:1px solid var(--line)}
+.wrap:has(#save:not([disabled])){padding-block-end:calc(var(--tabh) + env(safe-area-inset-bottom,0px) + 100px)}
+.btn{min-height:52px}
+.toast{bottom:calc(var(--tabh) + 16px + env(safe-area-inset-bottom,0px))}
+/* While the keyboard is up, hide the fixed bars so they don't ride on top of it. */
+body.typing .tabs{display:none}
+body.typing .actions{position:static}
+body.typing .wrap{padding-block-end:24px}
+/* Compact header on phones. */
+@media (max-width:480px){
+  header{padding-block:8px 6px;gap:8px}
+  .brand h1{font-size:22px}
+  .sync{font-size:11px}
+  .sync button{min-height:36px}
+  .stat{padding:6px 7px}
+  .stat b{font-size:18px}
+  .card{padding:14px;gap:12px}
+  .org{font-size:clamp(22px,6.4vw,28px)}
+}
 </style>
 </head>
 <body>
@@ -124,7 +175,7 @@ html{-webkit-tap-highlight-color:transparent}
 <div class="wrap">
   <header>
     <div class="brand">
-      <h1>Cadran <span>Lépine</span></h1>
+      <h1>Call <span>Prospects</span></h1>
       <div class="sync"><span class="dot" id="dot"></span><span id="syncTxt">Instantané</span><button id="refresh" type="button">Actualiser</button></div>
     </div>
     <div class="stats" id="stats"></div>
@@ -241,7 +292,7 @@ function stats(){
   const open=P.reduce((n,p)=>n+p.postes.filter(x=>x.st==="Ouverte").length,0);
   $("#stats").innerHTML=[[queue.length,"à appeler"],[late,"en retard"],[hot,"RDV / mandats"],[open,"postes ouverts"]].map(([b,s])=>`<div class="stat"><b>${b}</b><small>${s}</small></div>`).join("");
 }
-function loginView(){return `<section class="card login" aria-label="Connexion à Monday"><h2 class="org">Connecter Monday</h2><p class="meta">Le Cadran lit et écrit directement dans vos tableaux 01 et 02. Votre jeton reste sur cet iPhone.</p><ol><li>Dans Monday, touchez votre photo de profil puis <b>Developers</b>.</li><li>Ouvrez <b>My access tokens</b> et copiez le jeton.</li><li>Collez-le ci-dessous.</li></ol><label for="tok" class="meta" style="display:grid;gap:4px">Jeton API Monday<input type="password" id="tok" autocomplete="off" autocapitalize="off" spellcheck="false" style="font:15px var(--f-mono);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:12px"></label><button class="btn pri" type="button" id="connect">Connecter</button><p class="meta" id="loginMsg" aria-live="polite"></p></section>`}
+function loginView(){return `<section class="card login" aria-label="Connexion à Monday"><h2 class="org">Connecter Monday</h2><p class="meta">Call Prospects lit et écrit directement dans vos tableaux 01 et 02. Votre jeton reste sur cet iPhone.</p><ol><li>Dans Monday, touchez votre photo de profil puis <b>Developers</b>.</li><li>Ouvrez <b>My access tokens</b> et copiez le jeton.</li><li>Collez-le ci-dessous.</li></ol><label for="tok" class="meta" style="display:grid;gap:4px">Jeton API Monday<input type="password" id="tok" autocomplete="off" autocapitalize="off" spellcheck="false" style="font:15px var(--f-mono);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:12px"></label><button class="btn pri" type="button" id="connect">Connecter</button><p class="meta" id="loginMsg" aria-live="polite"></p></section>`}
 function render(){
   if(!TOKEN){$("#stats").innerHTML="";$("#main").innerHTML=loginView();wireLogin();return}
   recompute(); stats();
@@ -419,6 +470,8 @@ async function save(){
   }
 }
 
+document.addEventListener("focusin",e=>{if(e.target.matches("input,textarea,select"))document.body.classList.add("typing")});
+document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!a.matches("input,textarea,select"))document.body.classList.remove("typing")},60));
 render();
 setSync("",SNAP?"Hors ligne "+SNAP:"Non connecté");
 if(TOKEN) refresh();
