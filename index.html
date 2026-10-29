@@ -193,6 +193,49 @@ body.typing .wrap{padding-block-end:24px}
 .todo li.warn{border-color:var(--warn)}
 .todo strong{display:block}
 .chip.back{border:0;cursor:pointer;background:var(--accent-soft);color:var(--accent);min-height:34px;padding-inline:12px}
+/* bilan */
+.c-appel{background:var(--accent)} .c-courriel{background:var(--warn)} .c-linkedin{background:var(--cold)} .c-autre{background:var(--good)}
+.e-jamais{background:var(--sunk);border:1px solid var(--line)} .e-sans{background:var(--cold-soft);border:1px solid var(--cold)} .e-joint{background:var(--accent-soft);border:1px solid var(--accent)}
+.e-refus{background:var(--warn-soft);border:1px solid var(--warn)} .e-engage{background:var(--accent)} .e-gagne{background:var(--good)} .e-perdu{background:var(--hot)}
+.etat-bar{display:flex;height:34px;border-radius:10px;overflow:hidden;gap:2px;margin-top:4px}
+.etat-bar span{display:flex;align-items:center;justify-content:center;min-width:3px;font:700 12px var(--f-mono);color:var(--ink);overflow:hidden;border-radius:4px}
+.etat-bar .e-engage,.etat-bar .e-gagne,.etat-bar .e-perdu{color:var(--bg)}
+.legend{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.legend li{display:flex;align-items:center;gap:8px;font-size:14px}
+.legend li span{flex:1;min-width:0}
+.legend li b{margin-left:auto;font:700 16px var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.legend i{width:12px;height:12px;border-radius:3px;flex:none;display:inline-block}
+.types{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.types li{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;min-width:0;line-height:1.2}
+.types li b{margin-left:auto;font:700 18px var(--f-display);font-variant-numeric:tabular-nums}
+.types i{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block}
+.sbars{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;align-items:end;height:140px;margin-top:14px}
+.sbar{display:grid;grid-template-rows:1fr auto auto;height:100%;text-align:center;font-size:11px;color:var(--muted);min-width:0}
+.sbar .stk{align-self:end;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden;min-height:2px}
+.sbar .stk i{display:block}
+.sbar.now small{color:var(--accent)}
+.sbar small{font-weight:700;color:var(--ink);padding-top:3px}
+.sbar em{font-style:normal;white-space:nowrap}
+.minileg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);margin-top:10px}
+.minileg span{display:inline-flex;align-items:center;gap:5px}
+.minileg i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.reste{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.reste button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:12px 14px;font:600 15px var(--f-body);cursor:pointer;text-align:left;min-height:56px}
+.reste button small{display:block;font:400 12px var(--f-body);color:var(--muted)}
+.reste button b{font:700 22px var(--f-display);font-variant-numeric:tabular-nums}
+.reste button.hot b{color:var(--hot)}
+.reste button[aria-expanded="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.canaux{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.canaux th,.canaux td{padding:8px 4px;border-top:1px solid var(--line);text-align:right}
+.canaux th:first-child,.canaux td:first-child{text-align:left}
+.canaux th{font:700 11px var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-top:0;white-space:nowrap}
+.canaux td{white-space:nowrap}
+.canaux td:first-child{white-space:normal}
+.fix{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.fix li{border-left:3px solid var(--warn);padding-left:10px;font-size:14px}
+.fix li button{all:unset;cursor:pointer;font-weight:600;text-decoration:underline;text-decoration-color:var(--line)}
+.fix li span{display:block;color:var(--muted);font-size:13px}
+details.more summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px;padding:6px 0;min-height:34px}
 </style>
 </head>
 <body>
@@ -209,7 +252,7 @@ body.typing .wrap{padding-block-end:24px}
       <button role="tab" id="t-file" aria-selected="false" data-v="file">File</button>
       <button role="tab" id="t-pipe" aria-selected="false" data-v="pipe">Pipeline</button>
       <button role="tab" id="t-cherche" aria-selected="false" data-v="cherche">Chercher</button>
-      <button role="tab" id="t-prog" aria-selected="false" data-v="prog">Progrès</button>
+      <button role="tab" id="t-prog" aria-selected="false" data-v="prog">Bilan</button>
     </div>
   </header>
   <main id="main" class="view"></main>
@@ -274,7 +317,9 @@ function mk(o,a,postes){
     dec:{name:decName,fn:g("text_mm0f1xph"),tel:g("texte5"),ext:g("text_mm8be17e"),mail:g("texte27"),li:urlOf(g("link_mm8bmbaa"))},
     res:resTxt?{name:resTxt,tel:g("phone_mm8b26ed"),mail:g("email_mm8b5fm4")}:null,
     std:g("phone_mm8btzys"), angle:g("text_mm8bmezj"), site:urlOf(g("link_mkw74bkg")), veille:g("date_mm8bsy2m"),
-    postes, hist
+    postes, hist,
+    grp:a&&a.group?a.group.id:"",
+    incomplete:a?(a.subitems||[]).some(x=>!cv(x,"date_mm37s3q6")||!cv(x,"color_mm37p8a4")):false
   };
 }
 function score(p){
@@ -302,6 +347,7 @@ let RAW=SEED.raw, P=build(RAW), SNAP=SEED.at, live=false;
 let view="appel", cur=0, queue=[], skipped=new Set(), filt="tous", q="";
 // focus: contact opened by hand; it stays on the Appeler screen until saved, skipped or closed. back: the tab it came from.
 let focus=null, back="appel";
+let bilanF=null; // which "reste à faire" bucket is open in Bilan
 let sel={r:null,k:"📞 Appel",note:"",date:"",dateTouched:false}, busy=false;
 try{const v=localStorage.getItem("cadran.view");if(v)view=v}catch(e){}
 
@@ -404,24 +450,87 @@ function bonuses(){
   return (RAW.b04||[]).map(it=>({org:it.name,type:cv(it,"color_mm8j3rgn"),amt:+cv(it,"numeric_mm8j99zq")||0,st:cv(it,"color_mm8jm8e2"),
     fin:cv(it,"date_mm8j2jw1"),fees:+cv(it,"numeric_mm8jsbyd")||0,id02:String(cvl(it,"board_relation_mm8jd3c8")[0]||"")}));
 }
-function progView(){
-  const H=P.flatMap(p=>p.hist.filter(h=>h.d&&h.d<=T).map(h=>({...h,org:p.org})));
-  const joint=h=>h.r&&!NOANS.has(h.r);
-  const w0=weekStart(TODAY), week=H.filter(h=>h.d>=iso(w0));
-  const weeks=[];
-  for(let i=7;i>=0;i--){const s=new Date(w0);s.setDate(s.getDate()-7*i);const e=new Date(s);e.setDate(e.getDate()+6);const a=iso(s),b=iso(e);weeks.push({l:fmtD(a),n:H.filter(h=>h.d>=a&&h.d<=b).length,now:i===0})}
-  const max=Math.max(1,...weeks.map(w=>w.n));
+/* Labels are matched by keyword, without their emoji, so renaming a status in Monday doesn't break the Bilan. */
+const lab=s=>String(s||"").replace(/^[^\p{L}\p{N}]+/u,"").trim().toLowerCase();
+const isDone=h=>!!h.r&&!lab(h.r).startsWith("à faire")&&!lab(h.r).startsWith("en attente");
+const isRefus=r=>/pas intéress|perdu/.test(lab(r));
+const isPos=r=>!isRefus(r)&&/positif|intéress|rdv|rencontre|mandat/.test(lab(r));
+const isRdv=r=>/rdv|mandat/.test(lab(r));
+const canalOf=k=>{const s=lab(k);return s.includes("appel")?"appel":s.includes("courriel")?"courriel":s.includes("linkedin")?"linkedin":"autre"};
+const CANAUX=[["appel","Appels"],["courriel","Courriels"],["linkedin","LinkedIn"],["autre","Rencontres, autres"]];
+const ETATS=[["jamais","Jamais contactées","e-jamais"],["sans","Contactées, jamais jointes","e-sans"],["joint","Jointes, à relancer","e-joint"],["refus","Pas intéressées","e-refus"],["engage","Engagées (intéressé, RDV, mandat proposé)","e-engage"],["gagne","Gagnées (mandat en cours, client)","e-gagne"],["perdu","Perdues","e-perdu"]];
+const BUCKETS=[["retard","Relances en retard","contactées, date dépassée","hot"],["semaine","Prévues sous 7 jours","aujourd'hui inclus",""],["premier","Premiers contacts","dans le pipeline, jamais contactées",""],["sansdate","Sans date de relance","contactées",""],["signal","Recrutent, hors pipeline","postes ouverts, jamais travaillées",""],["tard","Plus tard","dans plus de 7 jours",""]];
+const pct=(a,b)=>b?Math.round(a/b*100)+" %":"–";
 
+function bilan(){
+  const opps=P.filter(p=>p.id02);
+  for(const p of opps){
+    const done=p.hist.filter(isDone), st=lab(p.stage);
+    p.done=done.length;
+    p.etat=st.includes("perdu")?"perdu"
+      :(st.includes("mandat en cours")||st.includes("client"))?"gagne"
+      :(st.includes("rdv")||st.includes("rencontre")||st.includes("mandat proposé")||done.some(h=>isPos(h.r)))?"engage"
+      :done.some(h=>isRefus(h.r))?"refus"
+      :done.some(h=>!NOANS.has(h.r))?"joint"
+      :done.length?"sans":"jamais";
+    const late=p.nextDate?daysBetween(p.nextDate,T):null;
+    p.bucket=p.etat==="perdu"?null:!done.length?"premier":late===null?"sansdate":late>0?"retard":late>=-7?"semaine":"tard";
+    p.late=late;
+  }
+  const signal=P.filter(p=>!p.id02&&!p.noCall&&p.postes.some(x=>x.st==="Ouverte"));
+  for(const p of signal) p.bucket="signal";
+  return {opps,signal};
+}
+
+function progView(){
+  const {opps,signal}=bilan();
+  const H=opps.flatMap(p=>p.hist.filter(h=>isDone(h)&&h.d&&h.d<=T).map(h=>({...h,org:p.org})));
+  const nE=k=>opps.filter(p=>p.etat===k).length;
+
+  // Où j'en suis
+  const tot=opps.length||1;
+  const bar=ETATS.map(([k,,c])=>{const n=nE(k);return n?`<span class="${c}" style="flex:${n}" title="${esc(n)}">${n/tot>.06?n:""}</span>`:""}).join("");
+
+  // Ce que j'ai fait
+  const contacted=opps.filter(p=>p.done).length, reached=opps.filter(p=>p.hist.some(h=>isDone(h)&&!NOANS.has(h.r))).length;
+  const engaged=nE("engage")+nE("gagne");
+  const byType=Object.fromEntries(CANAUX.map(([k])=>[k,H.filter(h=>canalOf(h.k)===k).length]));
+  const w0=weekStart(TODAY), weeks=[];
+  for(let i=7;i>=0;i--){const s=new Date(w0);s.setDate(s.getDate()-7*i);const e=new Date(s);e.setDate(e.getDate()+6);const a=iso(s),b=iso(e);const hs=H.filter(h=>h.d>=a&&h.d<=b);weeks.push({l:fmtD(a),n:hs.length,by:Object.fromEntries(CANAUX.map(([k])=>[k,hs.filter(h=>canalOf(h.k)===k).length])),now:i===0})}
+  const max=Math.max(1,...weeks.map(w=>w.n));
+  const thisW=weeks[7].n, lastW=weeks[6].n;
+
+  // Ce qu'il me reste à faire
+  const pool=[...opps,...signal];
+  const nB=k=>pool.filter(p=>p.bucket===k).length;
+  const sortB=(a,b)=>(b.late??-999)-(a.late??-999)||b.score-a.score;
+  const open=bilanF?pool.filter(p=>p.bucket===bilanF).sort(bilanF==="premier"||bilanF==="signal"?(a,b)=>b.score-a.score:sortB):[];
+  const openLab=bilanF?BUCKETS.find(b=>b[0]===bilanF)[1]:"";
+
+  // Efficacité par canal
+  const canaux=CANAUX.map(([k,l])=>{const xs=H.filter(h=>canalOf(h.k)===k);return {l,n:xs.length,j:xs.filter(h=>!NOANS.has(h.r)).length,pos:xs.filter(h=>isPos(h.r)).length,rdv:xs.filter(h=>isRdv(h.r)).length}}).filter(c=>c.n);
+
+  // Entonnoir
+  const rk=p=>RANK[p.stage]??0, reachedStage=p=>p.done||rk(p)>=1;
+  const F=[["Dans le pipeline",opps.length],["Contactées",opps.filter(reachedStage).length],["Jointes",reached],["RDV / rencontre",opps.filter(p=>rk(p)>=2&&rk(p)<=5).length],["Mandat proposé",opps.filter(p=>rk(p)>=3&&rk(p)<=5).length],["Mandat en cours ou client",opps.filter(p=>rk(p)>=4&&rk(p)<=5).length]];
+
+  // À corriger dans Monday
+  const fix=[];
+  for(const p of opps){
+    const s=lab(p.stage);
+    if(p.grp==="group_mm7df1sc"&&p.done) fix.push([p,"Déjà contactée mais rangée dans « À APPELER »","Déplacer dans « EN COURS »"]);
+    if(s.includes("à contacter")&&p.done) fix.push([p,"Déjà contactée mais au stade « À contacter »","Passer au stade « En discussion »"]);
+    if(p.grp==="topics"&&!p.done&&p.etat!=="perdu") fix.push([p,"Dans « EN COURS » sans aucune action enregistrée","Ajouter l'action déjà faite"]);
+    if(p.etat==="perdu"&&p.nextDate) fix.push([p,"Perdue avec une date de prochaine action","Effacer la date"]);
+    if(p.etat!=="perdu"&&p.done&&!p.nextDate) fix.push([p,"Contactée sans date de prochaine action","Fixer la date de relance"]);
+    if(p.incomplete) fix.push([p,"Action sans date ou sans type","Compléter le sous-élément"]);
+  }
+
+  // Bonifications (unchanged)
   const B=bonuses(), sum=f=>B.filter(f).reduce((n,b)=>n+b.amt,0);
   const won=sum(b=>b.st==="✅ Acquise"||b.st==="💵 Versée"), paid=sum(b=>b.st==="💵 Versée"), pend=sum(b=>b.st==="⏳ En attente"||b.st==="❓ À vérifier");
   const fees=B.filter(b=>b.st!=="❌ Annulée").reduce((n,b)=>n+b.fees,0);
-
-  const orgs=new Set(H.map(h=>h.org)), reached=new Set(H.filter(joint).map(h=>h.org));
-  const met=P.filter(p=>RANK[p.stage]>=RANK["3 - RDV / rencontre"]&&RANK[p.stage]<=RANK["6 - Client"]);
   const mandats=P.filter(p=>p.stage==="5 - Mandat en cours"||p.stage==="6 - Client");
-  const F=[["Organisations contactées",orgs.size],["Décideur ou équipe joints",reached.size],["RDV / rencontres",met.length],["Mandats obtenus",mandats.length]];
-
-  // What can still turn into a bonus, most concrete first.
   const in04=new Set(B.map(b=>b.id02));
   const todo=[
     ...mandats.filter(p=>p.id02&&!in04.has(String(p.id02))).map(p=>[p.org,"Mandat en cours sans bonification enregistrée : ajoutez l'ouverture client dans le tableau 04.","warn"]),
@@ -430,19 +539,48 @@ function progView(){
     ...P.filter(p=>p.stage==="4 - Mandat proposé").map(p=>[p.org,"Mandat proposé : s'il est signé et que le client est nouveau, l'ouverture compte.",""]),
   ];
 
-  return `<section class="card" aria-label="Bonifications"><div class="sec"><h3>Bonifications</h3>
+  return `<section class="card" aria-label="Où j'en suis"><div class="sec"><h3>Où j'en suis</h3>
+    <p class="meta">${opps.length} organisations dans le pipeline 02 - ACTIONS.</p>
+    <div class="etat-bar" role="img" aria-label="${ETATS.map(([k,l])=>l+" "+nE(k)).join(", ")}">${bar}</div>
+    <ul class="legend">${ETATS.map(([k,l,c])=>`<li><i class="${c}"></i><span>${esc(l)}</span><b>${nE(k)}</b></li>`).join("")}</ul>
+  </div></section>
+
+  <section class="card" aria-label="Ce que j'ai fait"><div class="sec"><h3>Ce que j'ai fait</h3>
+    <div class="kpis"><div class="kpi"><b>${H.length}</b><small>actions réalisées</small></div><div class="kpi"><b>${contacted}</b><small>organisations contactées</small></div>
+    <div class="kpi"><b>${reached}</b><small>jointes au moins une fois</small></div><div class="kpi good"><b>${engaged}</b><small>engagées ou gagnées</small></div></div>
+    <ul class="types">${CANAUX.map(([k,l])=>`<li><i class="c-${k}"></i>${esc(l)}<b>${byType[k]}</b></li>`).join("")}</ul>
+    <p class="meta" style="margin-top:12px">Cette semaine : <b>${thisW}</b> action${thisW>1?"s":""}, contre ${lastW} la semaine dernière.</p>
+    <div class="sbars" role="img" aria-label="Actions par semaine sur 8 semaines : ${weeks.map(w=>w.n).join(", ")}">${weeks.map(w=>`<div class="sbar${w.now?" now":""}"><div class="stk" style="height:${Math.round(w.n/max*100)}%">${CANAUX.map(([k])=>w.by[k]?`<i class="c-${k}" style="flex:${w.by[k]}"></i>`:"").join("")}</div><small>${w.n}</small><em>${esc(w.l)}</em></div>`).join("")}</div>
+    <div class="minileg">${CANAUX.map(([k,l])=>`<span><i class="c-${k}"></i>${esc(l)}</span>`).join("")}</div>
+  </div></section>
+
+  <section class="card" aria-label="Ce qu'il me reste à faire"><div class="sec"><h3>Ce qu'il me reste à faire</h3>
+    <ul class="reste">${BUCKETS.map(([k,l,s,c])=>`<li><button type="button" class="${c}" data-bk="${k}" aria-expanded="${bilanF===k}"><span>${esc(l)}<small>${esc(s)}</small></span><b>${nB(k)}</b></button></li>`).join("")}</ul>
+  </div>
+  ${bilanF?`<div class="sec" id="bk-list"><h3>${esc(openLab)} · ${open.length}</h3>${listView(open,"Rien ici pour l'instant.")}</div>`:`<p class="meta">Touchez une ligne pour voir les organisations, puis une organisation pour l'appeler.</p>`}
+  </section>
+
+  <section class="card" aria-label="Efficacité par canal"><div class="sec"><h3>Efficacité par canal</h3>
+    <table class="canaux"><thead><tr><th>Canal</th><th>Nb</th><th>Joint</th><th>Positif</th><th>RDV</th></tr></thead>
+    <tbody>${canaux.map(c=>`<tr><td>${esc(c.l)}</td><td>${c.n}</td><td>${pct(c.j,c.n)}</td><td>${pct(c.pos,c.n)}</td><td>${c.rdv}</td></tr>`).join("")}</tbody></table>
+    <p class="meta" style="margin-top:8px">Joint = tout sauf « Pas joint ». Positif = intéressé, RDV ou mandat.</p>
+  </div></section>
+
+  <section class="card" aria-label="Entonnoir"><div class="sec"><h3>Entonnoir depuis le début</h3>
+    <div class="funnel">${F.map(([l,n],i)=>`<div><span>${l}</span><b>${n}</b><small>${i&&F[i-1][1]?Math.round(n/F[i-1][1]*100)+" %":""}</small></div>`).join("")}</div>
+  </div></section>
+
+  <section class="card" aria-label="À corriger dans Monday"><div class="sec"><h3>À corriger dans Monday · ${fix.length}</h3>
+    ${fix.length?`<ul class="fix">${fix.slice(0,6).map(([p,pb,c])=>`<li><button type="button" data-open="${esc(key(p))}">${esc(p.org)}</button><span>${esc(pb)} → ${esc(c)}</span></li>`).join("")}</ul>
+    ${fix.length>6?`<details class="more"><summary>Voir les ${fix.length-6} autres</summary><ul class="fix">${fix.slice(6).map(([p,pb,c])=>`<li><button type="button" data-open="${esc(key(p))}">${esc(p.org)}</button><span>${esc(pb)} → ${esc(c)}</span></li>`).join("")}</ul></details>`:""}`
+    :`<p class="empty">Rien à corriger : le tableau est propre.</p>`}
+  </div></section>
+
+  <section class="card" aria-label="Bonifications"><div class="sec"><h3>Bonifications</h3>
     ${live&&!RAW.b04?`<p class="meta">Le tableau 04 - BONIFICATIONS n'a pas pu être lu. Vérifiez votre accès dans Monday puis actualisez.</p>`:""}
     <div class="kpis"><div class="kpi good"><b>${money(won)}</b><small>gagnées</small></div><div class="kpi"><b>${money(paid)}</b><small>déjà versées</small></div>
     <div class="kpi"><b>${money(pend)}</b><small>en attente ou à vérifier</small></div><div class="kpi"><b>${money(fees)}</b><small>honoraires générés</small></div></div>
     ${B.length?`<ul class="bon">${B.map(b=>`<li><span><strong>${esc(b.org)}</strong><span class="meta">${esc(b.type)}</span></span><span class="r"><b>${money(b.amt)}</b><span class="chip">${esc(b.st)}</span></span></li>`).join("")}</ul>`:`<p class="empty">Aucune bonification enregistrée pour l'instant.</p>`}
-  </div></section>
-  <section class="card" aria-label="Activité"><div class="sec"><h3>Cette semaine</h3>
-    <div class="kpis"><div class="kpi"><b>${week.length}</b><small>actions</small></div><div class="kpi"><b>${week.filter(joint).length}</b><small>personnes jointes</small></div>
-    <div class="kpi"><b>${week.filter(h=>h.r==="📅 RDV obtenu").length}</b><small>RDV obtenus</small></div><div class="kpi"><b>${new Set(week.map(h=>h.org)).size}</b><small>organisations touchées</small></div></div>
-    <div class="bars" role="img" aria-label="Actions par semaine sur 8 semaines : ${weeks.map(w=>w.n).join(", ")}">${weeks.map(w=>`<div class="bar${w.now?" now":""}"><i style="height:${Math.round(w.n/max*100)}%"></i><small>${w.n}</small><em>${esc(w.l)}</em></div>`).join("")}</div>
-  </div></section>
-  <section class="card" aria-label="Entonnoir"><div class="sec"><h3>Depuis le début</h3>
-    <div class="funnel">${F.map(([l,n],i)=>`<div><span>${l}</span><b>${n}</b><small>${i&&F[i-1][1]?Math.round(n/F[i-1][1]*100)+" %":""}</small></div>`).join("")}</div>
   </div></section>
   <section class="card" aria-label="Prochaines bonifications"><div class="sec"><h3>Prochaines bonifications à aller chercher</h3>
     ${todo.length?`<ul class="todo">${todo.map(([o,t,c])=>`<li class="${c}"><strong>${esc(o)}</strong>${esc(t)}</li>`).join("")}</ul>`:`<p class="empty">Rien en vue pour l'instant : continuez d'appeler.</p>`}
@@ -461,6 +599,7 @@ function wire(){
   }));
   document.querySelectorAll("[data-r]").forEach(b=>b.addEventListener("click",()=>{sel.r=b.dataset.r;sel.dateTouched=false;keepNote();render()}));
   document.querySelectorAll("[data-f]").forEach(b=>b.addEventListener("click",()=>{filt=b.dataset.f;render()}));
+  document.querySelectorAll("[data-bk]").forEach(b=>b.addEventListener("click",()=>{bilanF=bilanF===b.dataset.bk?null:b.dataset.bk;render();const t=$("#bk-list");if(t&&bilanF)t.scrollIntoView({behavior:"smooth",block:"start"})}));
   document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>openP(b.dataset.open)));
   const k=$("#k"); if(k)k.addEventListener("change",()=>{sel.k=k.value;keepNote()});
   const nd=$("#nd"); if(nd)nd.addEventListener("change",()=>{sel.date=nd.value;sel.dateTouched=true;keepNote();render()});
